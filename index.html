@@ -3,238 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔐 সিক্রেট ডেটাবেস</title>
+    <title>📤 ফাইল আপলোড</title>
+    <!-- QR Code + Google Sign-In -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #0c0c1a 0%, #1a1a2e 50%, #16213e 100%);
-            min-height: 100vh; color: #e0e0e0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; color: white; padding: 20px;
         }
-        
-        /* কমন স্টাইল */
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .glass { 
-            background: rgba(255,255,255,0.08); 
-            backdrop-filter: blur(20px); 
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 20px; padding: 30px; margin: 20px 0;
+        .container { max-width: 1000px; margin: 0 auto; }
+        .glass {
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 25px;
+            padding: 40px; margin: 40px 0; text-align: center;
         }
 
-        /* অ্যাডমিন লগইন */
-        .admin-login {
-            max-width: 400px; margin: 100px auto; text-align: center;
-        }
-        .admin-login h1 {
-            font-size: 32px; background: linear-gradient(135deg, #ffd700, #ffed4e);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            margin-bottom: 20px;
-        }
-        .pass-input {
-            width: 100%; padding: 18px; border: none; border-radius: 15px;
-            background: rgba(255,255,255,0.15); color: white; font-size: 18px;
-            text-align: center; margin-bottom: 20px;
-        }
-        .login-btn {
-            width: 100%; padding: 18px; background: linear-gradient(135deg, #ffd700, #ffed4e);
-            color: #000; border: none; border-radius: 15px; font-size: 18px;
-            font-weight: 700; cursor: pointer;
-        }
-
-        /* ইউজার আপলোড UI */
-        .user-upload {
-            max-width: 500px; margin: 80px auto; text-align: center;
-        }
+        /* ইউজার UI (ডিফল্ট) */
+        .user-upload { display: block; }
         .upload-zone {
-            border: 3px dashed rgba(255,255,255,0.4); border-radius: 20px;
-            padding: 60px 30px; cursor: pointer; transition: all 0.3s;
-            margin: 30px 0;
+            border: 4px dashed rgba(255,255,255,0.5); border-radius: 20px;
+            padding: 80px 40px; cursor: pointer; transition: all 0.3s;
+            margin: 40px 0;
         }
         .upload-zone:hover, .upload-zone.dragover {
-            border-color: #00ff88; background: rgba(0,255,136,0.1);
-            transform: scale(1.02);
+            border-color: #00ff88 !important; background: rgba(0,255,136,0.15);
+            transform: scale(1.03);
         }
-        .upload-icon { font-size: 64px; margin-bottom: 20px; }
+        .upload-icon { font-size: 80px; margin-bottom: 25px; }
+        .upload-title { font-size: 32px; font-weight: 800; margin-bottom: 15px; }
         input[type="file"] { display: none; }
-        .upload-text { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
+        
+        /* QR কোড */
+        #qrCode { margin: 20px auto; background: white; padding: 20px; border-radius: 15px; }
+
+        /* 🔐 হাইডেন অ্যাডমিন লগইন */
+        .admin-login { display: none; }
+        .admin-login.show { display: block !important; }
+        #adminSecret { 
+            width: 100%; padding: 20px; border: none; border-radius: 15px;
+            background: rgba(255,255,255,0.2); color: white; font-size: 18px;
+            margin-bottom: 20px; text-align: center;
+        }
+        .g_id_signin { margin: 20px 0; }
+        .admin-btn {
+            background: linear-gradient(135deg, #ffd700, #ffed4e); color: #000;
+            border: none; padding: 18px 40px; border-radius: 25px;
+            font-size: 18px; font-weight: 700; cursor: pointer; margin: 10px;
+        }
 
         /* অ্যাডমিন ড্যাশবোর্ড */
         .admin-dashboard { display: none; }
         .header {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 30px;
+            margin-bottom: 30px; padding-bottom: 20px;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
         }
         .header h1 {
-            font-size: 28px; background: linear-gradient(135deg, #00ff88, #00d4ff);
+            font-size: 36px; background: linear-gradient(135deg, #00ff88, #ffd700);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
         .logout-btn {
-            background: rgba(255,100,100,0.2); color: #ff6464;
-            border: 1px solid rgba(255,100,100,0.4); padding: 12px 24px;
-            border-radius: 25px; cursor: pointer; font-weight: 600;
-        }
-
-        .share-link-section {
-            background: rgba(0,0,0,0.3); padding: 25px; border-radius: 15px;
-            text-align: center; margin-bottom: 30px;
-        }
-        .share-link {
-            font-family: monospace; font-size: 16px; word-break: break-all;
-            background: rgba(255,255,255,0.1); padding: 15px;
-            border-radius: 10px; margin: 15px 0; border: 2px dashed #ffd700;
-        }
-        .copy-link-btn {
-            background: linear-gradient(135deg, #00ff88, #00cc6a); color: white;
-            border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer;
-            font-weight: 600; margin-top: 10px;
+            background: rgba(255,100,100,0.3); color: #ff6464; border: none;
+            padding: 15px 30px; border-radius: 25px; font-weight: 700; cursor: pointer;
         }
 
         .stats-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 20px; margin: 30px 0;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px; margin: 30px 0;
         }
         .stat-card {
-            text-align: center; padding: 25px; border-radius: 15px;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.15); padding: 30px; border-radius: 20px;
+            text-align: center;
         }
-        .stat-number { font-size: 32px; font-weight: 800; color: #ffd700; }
-        .stat-label { opacity: 0.9; margin-top: 5px; }
-
+        .stat-number { font-size: 40px; font-weight: 800; color: #ffd700; }
+        
         .files-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 25px;
+            gap: 25px; margin-top: 30px;
         }
         .file-card {
-            background: rgba(255,255,255,0.1); border-radius: 15px;
-            padding: 25px; transition: all 0.3s;
+            background: rgba(255,255,255,0.15); border-radius: 20px; padding: 25px;
+            transition: all 0.3s;
         }
-        .file-card:hover { transform: translateY(-5px); }
+        .file-card:hover { transform: translateY(-8px); }
         .file-preview {
-            width: 100%; height: 200px; object-fit: cover;
-            border-radius: 12px; margin-bottom: 15px; background: rgba(0,0,0,0.5);
+            width: 100%; height: 200px; object-fit: cover; border-radius: 15px;
+            margin-bottom: 15px; background: rgba(0,0,0,0.4);
         }
-        .file-name { font-weight: 700; color: #ffd700; font-size: 18px; margin-bottom: 10px; }
-        .file-meta { color: rgba(255,255,255,0.7); margin-bottom: 15px; font-size: 14px; }
-        .file-actions {
-            display: flex; gap: 10px;
-        }
+        .file-actions { display: flex; gap: 12px; }
         .action-btn {
-            flex: 1; padding: 12px; border: none; border-radius: 10px;
-            font-weight: 600; cursor: pointer; transition: all 0.3s;
+            flex: 1; padding: 12px; border: none; border-radius: 12px;
+            font-weight: 600; cursor: pointer;
         }
         .download-btn { background: linear-gradient(135deg, #00ff88, #00cc6a); color: white; }
-        .delete-btn { background: rgba(255,100,100,0.3); color: #ff6464; }
+        .delete-btn { background: rgba(255,100,100,0.4); color: #ff6464; }
 
         .toast {
-            position: fixed; top: 20px; right: 20px; background: #00ff88;
-            color: #000; padding: 15px 25px; border-radius: 10px;
-            font-weight: 600; z-index: 999; animation: slideIn 0.3s;
+            position: fixed; top: 30px; right: 30px; background: #00ff88;
+            color: #000; padding: 20px 30px; border-radius: 15px;
+            font-weight: 700; z-index: 9999; animation: slideIn 0.3s;
         }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } }
     </style>
 </head>
 <body>
-    <!-- অ্যাডমিন লগইন / ইউজার আপলোড (ডিফল্ট) -->
-    <div class="container" id="defaultView">
-        <!-- অ্যাডমিন লগইন -->
-        <div class="admin-login glass" id="adminLogin">
-            <h1>🔐 অ্যাডমিন লগইন</h1>
-            <input type="password" id="adminPass" class="pass-input" placeholder="পাসওয়ার্ড" maxlength="20">
-            <button class="login-btn" onclick="app.adminLogin()">এন্ট্রি</button>
-            <p style="margin-top: 15px; opacity: 0.7; font-size: 14px;">
-                ডিফল্ট: <strong>admin123</strong>
+    <div class="container">
+        <!-- ইউজার আপলোড (ডিফল্ট) + QR -->
+        <div class="glass user-upload" id="userUpload">
+            <div class="upload-icon">⬆️</div>
+            <h1 class="upload-title">ফাইল আপলোড করুন</h1>
+            <p style="opacity: 0.9; margin-bottom: 20px;">ছবি, ভিডিও, ডকুমেন্ট, টেক্সট (৫০MB পর্যন্ত)</p>
+            
+            <!-- QR কোড (ইউজারদের জন্য) -->
+            <div id="qrCode" style="max-width: 300px; margin: 0 auto 30px;"></div>
+            
+            <div class="upload-zone" id="uploadZone">
+                <div style="font-size: 24px; margin-bottom: 10px;">ক্লিক করুন বা ড্র্যাগ করুন</div>
+                <input type="file" id="fileInput" multiple>
+            </div>
+            <p style="opacity: 0.8;">✅ আপলোড হয়ে গেছে - ধন্যবাদ!</p>
+        </div>
+
+        <!-- 🔐 হাইডেন অ্যাডমিন লগইন -->
+        <div class="glass admin-login" id="adminLogin">
+            <h1 style="color: #ffd700; margin-bottom: 30px;">🔐 অ্যাডমিন এন্ট্রি</h1>
+            <input type="password" id="adminSecret" placeholder="সিক্রেট কী লিখুন">
+            <button class="admin-btn" onclick="app.adminLogin()">এন্ট্রি</button>
+            <div class="g_id_signin" data-type="standard" data-size="large" 
+                 data-theme="outline" data-text="Gmail দিয়ে লগইন" 
+                 data-shape="rectangular" data-logo_alignment="left"></div>
+            <p style="margin-top: 20px; opacity: 0.7; font-size: 14px;">
+                সিক্রেট: <strong>mysecret2026</strong>
             </p>
         </div>
 
-        <!-- ইউজার আপলোড UI -->
-        <div class="user-upload glass" id="userUpload">
-            <h2 style="margin-bottom: 20px; color: #ffd700;">📤 ফাইল আপলোড করুন</h2>
-            <div class="upload-zone" id="uploadZone">
-                <div class="upload-icon">⬆️</div>
-                <div class="upload-text">ফাইল, ছবি, ভিডিও, টেক্সট</div>
-                <div style="opacity: 0.8;">ক্লিক করুন বা ড্র্যাগ করুন</div>
-                <input type="file" id="fileInput" multiple accept="*/*">
-            </div>
-            <p style="opacity: 0.7;">আপলোড হয়ে গেছে ✅ - ধন্যবাদ!</p>
-        </div>
-    </div>
-
-    <!-- অ্যাডমিন ড্যাশবোর্ড (লুকানো) -->
-    <div class="admin-dashboard" id="adminDashboard">
-        <div class="container">
-            <div class="header glass">
-                <h1>📊 সিক্রেট ডেটাবেস</h1>
+        <!-- অ্যাডমিন ড্যাশবোর্ড -->
+        <div class="admin-dashboard glass" id="adminDashboard">
+            <div class="header">
+                <h1>📊 প্রাইভেট ডেটাবেস</h1>
                 <button class="logout-btn" onclick="app.logout()">লগআউট</button>
             </div>
-
-            <div class="share-link-section glass">
-                <h3 style="color: #ffd700; margin-bottom: 15px;">🔗 শেয়ার লিংক</h3>
-                <div class="share-link" id="shareLink">লোড হচ্ছে...</div>
-                <button class="copy-link-btn" onclick="app.copyLink()">কপি করুন</button>
+            <div style="background: rgba(0,0,0,0.3); padding: 25px; border-radius: 15px; margin-bottom: 30px;">
+                <div style="font-family: monospace; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                    <strong>শেয়ার লিংক:</strong> <span id="shareLink"></span>
+                </div>
+                <div style="font-family: monospace; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                    <strong>আপনার অ্যাডমিন লিংক:</strong> <span id="adminLink"></span>
+                </div>
+                <button class="admin-btn" onclick="app.copyLink()">📋 ইউজার লিংক কপি</button>
+                <button class="admin-btn" onclick="app.copyAdminLink()">🔐 অ্যাডমিন লিংক কপি</button>
             </div>
 
-            <div class="stats-grid" id="statsGrid"></div>
+            <div class="stats-grid" id="stats"></div>
             <div class="files-grid" id="filesGrid"></div>
         </div>
     </div>
 
     <script>
-        class SecretDatabase {
+        class UltimateSecretDB {
             constructor() {
-                this.ADMIN_PASS = 'admin123'; // পরিবর্তন করুন
-                this.DB_KEY = 'secretDB_2026';
-                this.files = JSON.parse(localStorage.getItem(this.DB_KEY)) || [];
+                this.SECRET_KEY = 'mysecret2026';
+                this.DB_NAME = 'ultimateSecretDB';
+                this.isAdmin = false;
+                this.currentUser = null;
                 window.app = this;
+                this.files = JSON.parse(localStorage.getItem(this.DB_NAME)) || [];
                 this.init();
             }
 
             init() {
-                this.updateShareLink();
-                this.bindUploadEvents();
-                if (localStorage.getItem('adminActive') === 'true') {
-                    this.showAdmin();
+                this.checkAdminAccess();
+                this.bindEvents();
+                this.generateQR();
+            }
+
+            checkAdminAccess() {
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('admin') === 'secret') {
+                    document.getElementById('adminLogin').classList.add('show');
+                    document.getElementById('userUpload').style.display = 'none';
                 }
+                
+                const baseUrl = window.location.origin + window.location.pathname;
+                const adminUrl = baseUrl + '?admin=secret';
+                
+                document.getElementById('shareLink').textContent = baseUrl;
+                document.getElementById('adminLink').textContent = adminUrl;
             }
 
-            adminLogin() {
-                const pass = document.getElementById('adminPass').value;
-                if (pass === this.ADMIN_PASS) {
-                    localStorage.setItem('adminActive', 'true');
-                    this.showAdmin();
-                    this.renderFiles();
-                    this.updateStats();
-                    this.toast('✅ অ্যাডমিন অ্যাক্সেস গ্রান্টেড!');
-                } else {
-                    this.shake(document.getElementById('adminLogin'));
-                    this.toast('❌ ভুল পাসওয়ার্ড!');
-                }
+            generateQR() {
+                const userUrl = window.location.origin + window.location.pathname;
+                new QRCode(document.getElementById('qrCode'), {
+                    text: userUrl,
+                    width: 250,
+                    height: 250,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
             }
 
-            showAdmin() {
-                document.getElementById('defaultView').style.display = 'none';
-                document.getElementById('adminDashboard').style.display = 'block';
-            }
-
-            logout() {
-                localStorage.removeItem('adminActive');
-                document.getElementById('adminDashboard').style.display = 'none';
-                document.getElementById('defaultView').style.display = 'block';
-                document.getElementById('adminPass').value = '';
-                this.toast('🔒 লগআউট সফল');
-            }
-
-            bindUploadEvents() {
+            bindEvents() {
                 const uploadZone = document.getElementById('uploadZone');
                 const fileInput = document.getElementById('fileInput');
 
-                // ক্লিক
-                uploadZone.onclick = () => fileInput.click();
-
-                // ড্র্যাগ ড্রপ
+                // Drag & Drop
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
                     uploadZone.addEventListener(event, e => {
                         e.preventDefault();
-                        e.stopPropagation();
                         if (event === 'dragenter' || event === 'dragover') {
                             uploadZone.classList.add('dragover');
                         } else {
@@ -246,20 +225,64 @@
                     });
                 });
 
-                // ফাইল সিলেক্ট
+                uploadZone.onclick = () => fileInput.click();
                 fileInput.onchange = e => {
                     this.handleFiles(e.target.files);
                     e.target.value = '';
                 };
+
+                // Admin secret login
+                document.getElementById('adminSecret').addEventListener('keypress', e => {
+                    if (e.key === 'Enter') this.adminLogin();
+                });
+            }
+
+            adminLogin() {
+                const secret = document.getElementById('adminSecret').value;
+                if (secret === this.SECRET_KEY) {
+                    this.isAdmin = true;
+                    this.showAdmin();
+                    this.renderFiles();
+                    this.updateStats();
+                    this.toast('✅ অ্যাডমিন অ্যাক্সেস গ্রান্টেড!');
+                } else {
+                    this.toast('❌ ভুল সিক্রেট কী!');
+                    document.getElementById('adminSecret').value = '';
+                }
+            }
+
+            handleGoogleSignIn(user) {
+                if (user) {
+                    this.currentUser = user.profileObj.email;
+                    this.isAdmin = true;
+                    this.showAdmin();
+                    this.renderFiles();
+                    this.updateStats();
+                    this.toast(`✅ স্বাগতম ${user.profileObj.name}!`);
+                }
+            }
+
+            showAdmin() {
+                document.getElementById('userUpload').style.display = 'none';
+                document.getElementById('adminLogin').style.display = 'none';
+                document.getElementById('adminDashboard').style.display = 'block';
+            }
+
+            logout() {
+                this.isAdmin = false;
+                document.getElementById('adminDashboard').style.display = 'none';
+                if (window.location.search.includes('admin=secret')) {
+                    document.getElementById('adminLogin').style.display = 'block';
+                } else {
+                    document.getElementById('userUpload').style.display = 'block';
+                }
+                this.toast('🔒 লগআউট সফল');
             }
 
             handleFiles(files) {
                 Array.from(files).forEach(file => {
-                    if (file.size > 50 * 1024 * 1024) {
-                        this.toast(`❌ ${file.name} খুব বড় (৫০MB)!`);
-                        return;
-                    }
-
+                    if (file.size > 50 * 1024 * 1024) return this.toast('❌ ৫০MB এর বেশি নয়!');
+                    
                     const reader = new FileReader();
                     reader.onload = e => {
                         const fileData = {
@@ -267,78 +290,67 @@
                             name: file.name,
                             size: this.formatBytes(file.size),
                             sizeBytes: file.size,
-                            type: file.type || 'text/plain',
+                            type: file.type || 'unknown',
                             data: e.target.result,
                             time: new Date().toLocaleString('bn-BD'),
-                            source: 'ইউজার'
+                            device: navigator.userAgent.slice(0, 50)
                         };
                         this.files.unshift(fileData);
-                        this.saveDB();
-                        
-                        if (localStorage.getItem('adminActive') === 'true') {
+                        this.saveFiles();
+                        if (this.isAdmin) {
                             this.renderFiles();
                             this.updateStats();
                         }
-                        
                         this.toast('✅ আপলোড সফল!');
                     };
                     reader.readAsDataURL(file);
                 });
             }
 
+            copyLink() {
+                navigator.clipboard.writeText(document.getElementById('shareLink').textContent).then(() => {
+                    this.toast('✅ ইউজার লিংক কপি হয়েছে!');
+                });
+            }
+
+            copyAdminLink() {
+                navigator.clipboard.writeText(document.getElementById('adminLink').textContent).then(() => {
+                    this.toast('🔐 অ্যাডমিন লিংক কপি হয়েছে!');
+                });
+            }
+
             renderFiles() {
                 const container = document.getElementById('filesGrid');
                 if (!this.files.length) {
-                    container.innerHTML = `
-                        <div style="grid-column: 1/-1; text-align: center; padding: 60px; opacity: 0.6;">
-                            <div style="font-size: 64px; margin-bottom: 20px;">📂</div>
-                            <h3>কোনো ফাইল নেই</h3>
-                        </div>
-                    `;
+                    container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:80px;opacity:0.6;"><div style="font-size:80px;margin-bottom:30px;">📂</div><h3>কোনো ফাইল নেই</h3></div>';
                     return;
                 }
-
-                container.innerHTML = this.files.map(file => `
-                    <div class="file-card glass">
-                        ${this.getPreview(file)}
-                        <div class="file-name">${this.escapeHtml(file.name)}</div>
-                        <div class="file-meta">
-                            📏 ${file.size} | 🕒 ${file.time} | 👤 ${file.source}
-                        </div>
+                container.innerHTML = this.files.map(f => `
+                    <div class="file-card">
+                        ${this.getPreview(f)}
+                        <div style="font-weight:700;color:#ffd700;font-size:18px;margin-bottom:8px;">${this.escapeHtml(f.name)}</div>
+                        <div style="color:rgba(255,255,255,0.8);font-size:14px;margin-bottom:15px;">${f.size} • ${f.time}</div>
                         <div class="file-actions">
-                            <a href="${file.data}" download="${this.escapeHtml(file.name)}" 
-                               class="action-btn download-btn">⬇️ ডাউনলোড</a>
-                            <button class="action-btn delete-btn" onclick="app.deleteFile('${file.id}')">
-                                🗑️ ডিলিট
-                            </button>
+                            <a href="${f.data}" download="${this.escapeHtml(f.name)}" class="action-btn download-btn">⬇️ ডাউনলোড</a>
+                            <button class="action-btn delete-btn" onclick="app.deleteFile('${f.id}')">🗑️ মুছুন</button>
                         </div>
                     </div>
                 `).join('');
             }
 
             getPreview(file) {
-                if (file.type.startsWith('image/')) {
-                    return `<img src="${file.data}" class="file-preview" alt="${file.name}">`;
-                } else if (file.type.startsWith('video/')) {
-                    return `<video src="${file.data}" class="file-preview" controls preload="metadata"></video>`;
-                } else if (file.type.startsWith('audio/')) {
-                    return `<audio src="${file.data}" controls style="width:100%; height:50px;"></audio>`;
-                }
-                return `<div class="file-preview" style="display:flex; align-items:center; justify-content:center; font-size:48px;">
-                    ${this.getFileIcon(file.type)}
-                </div>`;
+                if (file.type?.startsWith('image/')) return `<img src="${file.data}" class="file-preview">`;
+                if (file.type?.startsWith('video/')) return `<video src="${file.data}" class="file-preview" controls preload="metadata"></video>`;
+                return `<div class="file-preview" style="display:flex;align-items:center;justify-content:center;font-size:48px;">${this.getIcon(file.type)}</div>`;
             }
 
-            getFileIcon(type) {
-                if (type.includes('pdf')) return '📄';
-                if (type.includes('zip')) return '📦';
-                if (type.includes('text')) return '📝';
-                return '📎';
+            getIcon(type) {
+                return type?.includes('pdf') ? '📄' : type?.includes('zip') ? '📦' : '📎';
             }
 
             deleteFile(id) {
                 this.files = this.files.filter(f => f.id !== id);
-                this.saveDB();
+                this.saveFiles();
                 this.renderFiles();
                 this.updateStats();
                 this.toast('🗑️ ফাইল মুছে ফেলা হয়েছে');
@@ -346,82 +358,53 @@
 
             updateStats() {
                 const total = this.files.length;
-                const today = this.files.filter(f => {
-                    const date = new Date(f.time);
-                    return date.toDateString() === new Date().toDateString();
-                }).length;
+                const today = this.files.filter(f => new Date(f.time).toDateString() === new Date().toDateString()).length;
                 const size = this.files.reduce((sum, f) => sum + f.sizeBytes, 0);
-
-                document.getElementById('statsGrid').innerHTML = `
-                    <div class="stat-card">
-                        <div class="stat-number">${total}</div>
-                        <div>মোট ফাইল</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">${today}</div>
-                        <div>আজকের</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">${(size/1024/1024).toFixed(1)}MB</div>
-                        <div>মোট সাইজ</div>
-                    </div>
+                
+                document.getElementById('stats').innerHTML = `
+                    <div class="stat-card"><div class="stat-number">${total}</div>মোট ফাইল</div>
+                    <div class="stat-card"><div class="stat-number">${today}</div>আজকের</div>
+                    <div class="stat-card"><div class="stat-number">${(size/1024/1024).toFixed(1)}MB</div>মোট সাইজ</div>
                 `;
             }
 
-            updateShareLink() {
-                document.getElementById('shareLink').textContent = `${location.origin}${location.pathname}`;
-            }
-
-            copyLink() {
-                navigator.clipboard.writeText(document.getElementById('shareLink').textContent).then(() => {
-                    this.toast('✅ লিংক কপি হয়েছে!');
-                });
-            }
-
-            saveDB() {
-                localStorage.setItem(this.DB_KEY, JSON.stringify(this.files));
+            saveFiles() {
+                localStorage.setItem(this.DB_NAME, JSON.stringify(this.files));
             }
 
             formatBytes(bytes) {
-                if (bytes === 0) return '0 B';
-                const k = 1024;
-                const sizes = ['B', 'KB', 'MB', 'GB'];
+                if (!bytes) return '0 B';
+                const k = 1024, sizes = ['B','KB','MB','GB'];
                 const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return (bytes / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i];
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
             }
 
             escapeHtml(text) {
-                const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+                const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#039;'};
                 return text.replace(/[&<>"']/g, m => map[m]);
             }
 
             toast(msg) {
                 const toast = document.createElement('div');
-                toast.className = 'toast';
-                toast.textContent = msg;
+                toast.className = 'toast'; toast.textContent = msg;
                 document.body.appendChild(toast);
                 setTimeout(() => toast.remove(), 3000);
             }
-
-            shake(element) {
-                element.style.animation = 'shake 0.5s';
-                setTimeout(() => element.style.animation = '', 500);
-            }
         }
 
-        // শেক অ্যানিমেশন
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes shake {
-                0%, 100% { transform: translateX(0); }
-                25% { transform: translateX(-10px); }
-                75% { transform: translateX(10px); }
+        // Global functions
+        function handleGoogleSignInEvent(event) {
+            const user = event.detail;
+            if (user.selectedAccount) {
+                app.handleGoogleSignIn({ profileObj: {
+                    email: user.selectedAccount.email,
+                    name: user.selectedAccount.name
+                }});
             }
-        `;
-        document.head.appendChild(style);
+        }
+        window.handleGoogleSignInEvent = handleGoogleSignInEvent;
 
-        // অ্যাপ শুরু
-        const app = new SecretDatabase();
+        const app = new UltimateSecretDB();
     </script>
 </body>
 </html>
