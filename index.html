@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 EasyShare (MadeBySakib)</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: system-ui, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            height: 100vh; color: white; overflow: hidden;
+        }
+        .app-container {
+            display: flex; height: 100vh;
+        }
+        .sidebar {
+            width: 350px; background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px); border-right: 1px solid rgba(255,255,255,0.1);
+            display: flex; flex-direction: column;
+        }
+        .main-chat {
+            flex: 1; display: flex; flex-direction: column;
+        }
+        .header {
+            padding: 20px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .status {
+            padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600;
+        }
+        .status.connected { background: rgba(0,255,0,0.2); color: #00ff00; }
+        .status.waiting { background: rgba(255,193,7,0.2); color: #ffc107; }
+        .qr-section { padding: 30px; text-align: center; flex: 1; }
+        #qrCode { width: 200px; height: 200px; margin: 0 auto 20px; border-radius: 15px; }
+        .room-id { 
+            background: rgba(0,0,0,0.5); padding: 12px; border-radius: 10px;
+            font-family: monospace; font-size: 16px; word-break: break-all; margin-bottom: 15px;
+        }
+        .messages {
+            flex: 1; overflow-y: auto; padding: 20px; background: rgba(0,0,0,0.2);
+        }
+        .message {
+            margin-bottom: 20px; opacity: 0; animation: fadeIn 0.3s forwards;
+        }
+        .message.sent { text-align: right; }
+        .message.received { text-align: left; }
+        .msg-bubble {
+            display: inline-block; max-width: 70%; padding: 15px 20px;
+            border-radius: 20px; word-wrap: break-word;
+        }
+        .msg-bubble.sent { background: linear-gradient(135deg, #00d4ff, #0099cc); }
+        .msg-bubble.received { background: rgba(255,255,255,0.2); }
+        .file-msg { 
+            cursor: pointer; display: flex; align-items: center; gap: 10px;
+            padding: 10px; background: rgba(255,255,255,0.1); border-radius: 15px;
+        }
+        .file-icon { font-size: 24px; }
+        .file-preview { 
+            width: 60px; height: 60px; object-fit: cover; border-radius: 10px;
+        }
+        .input-area {
+            padding: 20px; background: rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex; gap: 10px; align-items: flex-end;
+        }
+        #messageInput {
+            flex: 1; padding: 15px 20px; border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 25px; background: rgba(255,255,255,0.1); color: white;
+            font-size: 16px; outline: none;
+        }
+        #fileInput { display: none; }
+        .btn {
+            padding: 15px 20px; border: none; border-radius: 25px; cursor: pointer;
+            font-weight: 600; transition: all 0.3s ease;
+        }
+        .send-btn { 
+            background: linear-gradient(135deg, #00ff88, #00cc6a); color: white;
+            width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        }
+        .file-btn { 
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52); color: white;
+            width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        }
+        .btn:hover { transform: scale(1.05); }
+        .user-info {
+            text-align: center; padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 768px) {
+            .sidebar { width: 300px; }
+            .app-container { flex-direction: column; }
+            .sidebar { height: 40%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="user-info">
+                <div style="font-size: 24px; margin-bottom: 10px;">👤 আপনার নাম</div>
+                <input type="text" id="usernameInput" placeholder="আপনার নাম লিখুন" 
+                       style="width:100%;padding:12px;border-radius:20px;border:1px solid rgba(255,255,255,0.3);background:rgba(0,0,0,0.5);color:white;text-align:center;">
+            </div>
+            
+            <div class="qr-section" id="qrSection">
+                <div class="status waiting" id="connectionStatus">সংযোগ অপেক্ষমাণ</div>
+                <div class="room-id" id="roomId"></div>
+                <canvas id="qrCode"></canvas>
+                <button class="btn" style="background:#ffd700;color:#000;width:100%;margin-top:15px;" onclick="app.createNewRoom()">
+                    🔄 নতুন রুম
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Chat -->
+        <div class="main-chat">
+            <div class="header">
+                <div class="status connected" id="chatStatus">চ্যাট রুম: <span id="currentRoom"></span></div>
+                <div>🟢 সংযুক্ত</div>
+            </div>
+            <div class="messages" id="messages"></div>
+            <div class="input-area">
+                <input type="file" id="fileInput" multiple accept="image/*,video/*,.pdf,.zip">
+                <button class="file-btn" onclick="document.getElementById('fileInput').click()" title="ফাইল পাঠান">📎</button>
+                <input type="text" id="messageInput" placeholder="বার্তা লিখুন..." maxlength="500">
+                <button class="send-btn" onclick="app.sendMessage()" title="পাঠান">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class RealTimeChat {
+            constructor() {
+                this.username = 'ব্যবহারকারী';
+                this.roomId = null;
+                this.peerConnection = null;
+                this.dataChannel = null;
+                this.isHost = false;
+                this.app = this;
+                window.app = this;
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.createNewRoom();
+            }
+
+            bindEvents() {
+                document.getElementById('messageInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.sendMessage();
+                });
+
+                document.getElementById('fileInput').addEventListener('change', (e) => {
+                    this.sendFiles(e.target.files);
+                    e.target.value = '';
+                });
+
+                document.getElementById('usernameInput').addEventListener('input', (e) => {
+                    this.username = e.target.value || 'ব্যবহারকারী';
+                });
+            }
+
+            createNewRoom() {
+                this.roomId = 'room_' + Math.random().toString(36).substr(2, 9).toUpperCase();
+                this.isHost = true;
+                this.updateUI();
+                this.initWebRTC();
+                this.addMessage('সিস্টেম', '🟢 নতুন চ্যাট রুম তৈরি হয়েছে! QR শেয়ার করুন।', 'system');
+            }
+
+            updateUI() {
+                document.getElementById('roomId').textContent = this.roomId;
+                document.getElementById('currentRoom').textContent = this.roomId;
+                
+                const url = `${window.location.origin}${window.location.pathname}?room=${this.roomId}`;
+                QRCode.toCanvas(document.getElementById('qrCode'), url, {
+                    width: 200, margin: 1,
+                    color: { dark: '#000', light: '#fff' }
+                });
+
+                document.getElementById('connectionStatus').textContent = 'QR শেয়ার করুন';
+                document.getElementById('connectionStatus').className = 'status waiting';
+            }
+
+            initWebRTC() {
+                const iceServers = [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' }
+                ];
+
+                this.peerConnection = new RTCPeerConnection({ iceServers });
+
+                if (this.isHost) {
+                    this.dataChannel = this.peerConnection.createDataChannel('chat');
+                    this.setupDataChannel();
+                    this.createOffer();
+                } else {
+                    this.peerConnection.ondatachannel = (event) => {
+                        this.dataChannel = event.channel;
+                        this.setupDataChannel();
+                    };
+                }
+
+                this.peerConnection.onconnectionstatechange = () => {
+                    if (this.peerConnection.connectionState === 'connected') {
+                        document.getElementById('connectionStatus').textContent = '✅ সংযুক্ত!';
+                        document.getElementById('connectionStatus').className = 'status connected';
+                        document.getElementById('chatStatus').className = 'status connected';
+                    }
+                };
+            }
+
+            setupDataChannel() {
+                this.dataChannel.onopen = () => {
+                    console.log('✅ ডেটা চ্যানেল খোলা');
+                };
+
+                this.dataChannel.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'message') {
+                        this.addMessage(data.username, data.text, 'received');
+                    } else if (data.type === 'file') {
+                        this.handleReceivedFile(data);
+                    }
+                };
+            }
+
+            async createOffer() {
+                try {
+                    const offer = await this.peerConnection.createOffer();
+                    await this.peerConnection.setLocalDescription(offer);
+                } catch (error) {
+                    console.error('Offer তৈরি ব্যর্থ:', error);
+                }
+            }
+
+            sendMessage() {
+                const input = document.getElementById('messageInput');
+                const text = input.value.trim();
+                if (!text || !this.dataChannel?.readyState === 'open') return;
+
+                const message = {
+                    type: 'message',
+                    username: this.username,
+                    text: text,
+                    timestamp: Date.now()
+                };
+
+                this.dataChannel.send(JSON.stringify(message));
+                this.addMessage(this.username, text, 'sent');
+                input.value = '';
+            }
+
+            sendFiles(files) {
+                if (!this.dataChannel?.readyState === 'open') {
+                    alert('❌ প্রথমে সংযোগ করুন!');
+                    return;
+                }
+
+                Array.from(files).forEach(file => {
+                    if (file.size > 50 * 1024 * 1024) {
+                        alert(`${file.name} খুব বড় (৫০MB)!`);
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const fileData = {
+                            type: 'file',
+                            username: this.username,
+                            name: file.name,
+                            size: file.size,
+                            mimeType: file.type,
+                            data: e.target.result.split(',')[1], // base64
+                            timestamp: Date.now()
+                        };
+                        this.dataChannel.send(JSON.stringify(fileData));
+                        this.addFileMessage(file.name, file.size, 'sent');
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            addMessage(username, text, type) {
+                const messages = document.getElementById('messages');
+                const div = document.createElement('div');
+                div.className = `message ${type}`;
+                div.innerHTML = `
+                    <div class="msg-bubble">
+                        <div style="font-weight:600; margin-bottom:5px;">${username}</div>
+                        ${text}
+                    </div>
+                `;
+                messages.appendChild(div);
+                messages.scrollTop = messages.scrollHeight;
+            }
+
+            addFileMessage(filename, size, type) {
+                const messages = document.getElementById('messages');
+                const div = document.createElement('div');
+                div.className = `message ${type}`;
+                div.innerHTML = `
+                    <div class="msg-bubble file-msg">
+                        <span class="file-icon">📎</span>
+                        <div>
+                            <div style="font-weight:600;">${filename}</div>
+                            <div style="font-size:14px;color:#aaa;">${(size/1024/1024).toFixed(1)} MB</div>
+                        </div>
+                    </div>
+                `;
+                messages.appendChild(div);
+                messages.scrollTop = messages.scrollHeight;
+            }
+
+            handleReceivedFile(data) {
+                const url = `data:${data.mimeType};base64,${data.data}`;
+                this.addMessage(data.username, `
+                    <div class="file-msg" onclick="window.open('${url}', '_blank')">
+                        <span class="file-icon">${this.getFileIcon(data.mimeType)}</span>
+                        <div>
+                            <div style="font-weight:600;">${data.name}</div>
+                            <div style="font-size:14px;color:#aaa;">${(data.size/1024/1024).toFixed(1)} MB - ক্লিক করে ডাউনলোড</div>
+                        </div>
+                    </div>
+                `, 'received');
+            }
+
+            getFileIcon(mimeType) {
+                if (mimeType.includes('image')) return '🖼️';
+                if (mimeType.includes('video')) return '🎥';
+                if (mimeType.includes('audio')) return '🎵';
+                return '📎';
+            }
+        }
+
+        // অ্যাপ চালু
+        const app = new RealTimeChat();
+
+        // URL থেকে রুম জয়েন
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const room = urlParams.get('room');
+            if (room && room !== app.roomId) {
+                app.roomId = room;
+                app.isHost = false;
+                app.updateUI();
+                app.initWebRTC();
+                app.addMessage('সিস্টেম', '🔗 চ্যাট রুমে যোগদান করা হয়েছে!', 'system');
+            }
+        });
+    </script>
+</body>
+</html>
