@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📤 ফাইল আপলোড</title>
+    <title>📤 ফাইল আপলোড - মাল্টি ট্যাব</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -31,7 +31,8 @@
         .upload-title { font-size: 32px; font-weight: 800; margin-bottom: 15px; }
         input[type="file"] { display: none; }
         #qrCode { margin: 20px auto; background: white; padding: 20px; border-radius: 15px; }
-        .admin-login { display: none; }
+        
+        .admin-login, .admin-dashboard { display: none; }
         .admin-login.show { display: block !important; }
         #adminSecret { 
             width: 100%; padding: 20px; border: none; border-radius: 15px;
@@ -43,7 +44,11 @@
             border: none; padding: 18px 40px; border-radius: 25px;
             font-size: 18px; font-weight: 700; cursor: pointer; margin: 10px;
         }
-        .admin-dashboard { display: none; }
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 30px; padding-bottom: 20px;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+        }
         .header h1 {
             font-size: 36px; background: linear-gradient(135deg, #00ff88, #ffd700);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
@@ -87,12 +92,17 @@
             font-weight: 700; z-index: 9999; animation: slideIn 0.3s;
         }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } }
+        .live-indicator { 
+            position: fixed; bottom: 20px; right: 20px; 
+            background: #00ff88; color: #000; padding: 10px 20px;
+            border-radius: 25px; font-weight: 700; font-size: 14px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- ইউজার আপলোড -->
-        <div class="glass user-upload" id="userUpload">
+        <!-- ইউজার UI -->
+        <div class="glass" id="userUpload">
             <div class="upload-icon">⬆️</div>
             <h1 class="upload-title">ফাইল আপলোড করুন</h1>
             <p style="opacity: 0.9; margin-bottom: 20px;">ছবি, ভিডিও, ডকুমেন্ট (৫০MB পর্যন্ত)</p>
@@ -101,7 +111,7 @@
                 <div style="font-size: 24px; margin-bottom: 10px;">ক্লিক/ড্র্যাগ করুন</div>
                 <input type="file" id="fileInput" multiple>
             </div>
-            <div id="uploadStatus" style="opacity: 0.8;"></div>
+            <div id="uploadStatus"></div>
         </div>
 
         <!-- হাইডেন অ্যাডমিন লগইন -->
@@ -113,9 +123,9 @@
         </div>
 
         <!-- অ্যাডমিন ড্যাশবোর্ড -->
-        <div class="admin-dashboard glass" id="adminDashboard">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                <h1>📊 প্রাইভেট ডেটাবেস</h1>
+        <div class="glass admin-dashboard" id="adminDashboard">
+            <div class="header">
+                <h1>📊 লাইভ ডেটাবেস</h1>
                 <button class="logout-btn" onclick="app.logout()">লগআউট</button>
             </div>
             <div style="background: rgba(0,0,0,0.3); padding: 25px; border-radius: 15px; margin-bottom: 30px;">
@@ -129,26 +139,59 @@
             </div>
             <div class="stats-grid" id="stats"></div>
             <div class="files-grid" id="filesGrid"></div>
+            <div class="live-indicator" id="liveIndicator">🔴 অফলাইন</div>
         </div>
     </div>
 
     <script>
-        class FixedSecretDB {
+        class MultiTabSecretDB {
             constructor() {
                 this.SECRET_KEY = 'mysecret2026';
-                this.DB_NAME = 'fixedSecretDB_v2';
+                this.DB_NAME = 'multitabSecretDB_v3';
+                this.CHANNEL_NAME = 'file_upload_channel';
                 window.app = this;
                 this.files = [];
                 this.isAdmin = false;
+                this.channel = null;
                 this.init();
             }
 
             init() {
-                // 🔧 ফিক্স: সবসময় লোড করা
                 this.loadFiles();
+                this.setupBroadcastChannel();
+                this.setupStorageListener();
                 this.checkAdminAccess();
                 this.bindEvents();
-                setInterval(() => this.loadFiles(), 2000); // ২ সেকেন্ডে একবার চেক
+            }
+
+            // 🔥 মাল্টি-ট্যাব সিঙ্ক
+            setupBroadcastChannel() {
+                if ('BroadcastChannel' in window) {
+                    this.channel = new BroadcastChannel(this.CHANNEL_NAME);
+                    this.channel.onmessage = (event) => {
+                        if (event.data.type === 'files_updated') {
+                            this.loadFiles();
+                            if (this.isAdmin) {
+                                this.renderFiles();
+                                this.updateStats();
+                                this.updateLiveStatus('🟢 লাইভ');
+                            }
+                        }
+                    };
+                }
+            }
+
+            setupStorageListener() {
+                window.addEventListener('storage', (e) => {
+                    if (e.key === this.DB_NAME) {
+                        this.loadFiles();
+                        if (this.isAdmin) {
+                            this.renderFiles();
+                            this.updateStats();
+                            this.updateLiveStatus('🟢 লাইভ');
+                        }
+                    }
+                });
             }
 
             loadFiles() {
@@ -156,25 +199,23 @@
                     const saved = localStorage.getItem(this.DB_NAME);
                     if (saved) {
                         const newFiles = JSON.parse(saved);
-                        if (JSON.stringify(newFiles) !== JSON.stringify(this.files)) {
-                            this.files = newFiles;
-                            if (this.isAdmin) {
-                                this.renderFiles();
-                                this.updateStats();
-                            }
-                        }
+                        this.files = newFiles;
                     }
                 } catch(e) {
-                    console.log('DB load error:', e);
+                    console.error('Load error:', e);
                 }
             }
 
             saveFiles() {
                 localStorage.setItem(this.DB_NAME, JSON.stringify(this.files));
+                
+                // 🔥 সব ট্যাবে নোটিফাই
+                if (this.channel) {
+                    this.channel.postMessage({ type: 'files_updated', timestamp: Date.now() });
+                }
+                
                 document.getElementById('uploadStatus').textContent = '✅ সংরক্ষিত!';
-                setTimeout(() => {
-                    document.getElementById('uploadStatus').textContent = '';
-                }, 2000);
+                setTimeout(() => document.getElementById('uploadStatus').textContent = '', 2000);
             }
 
             checkAdminAccess() {
@@ -183,22 +224,22 @@
                     document.getElementById('adminLogin').classList.add('show');
                     document.getElementById('userUpload').style.display = 'none';
                 }
-                document.getElementById('shareLink').textContent = window.location.origin + window.location.pathname;
-                document.getElementById('adminLink').textContent = window.location.origin + window.location.pathname + '?admin=secret';
+                const baseUrl = window.location.origin + window.location.pathname;
+                document.getElementById('shareLink').textContent = baseUrl;
+                document.getElementById('adminLink').textContent = baseUrl + '?admin=secret';
                 this.generateQR();
             }
 
             generateQR() {
-                const userUrl = window.location.origin + window.location.pathname;
                 setTimeout(() => {
                     if (typeof QRCode !== 'undefined' && document.getElementById('qrCode')) {
                         new QRCode(document.getElementById('qrCode'), {
-                            text: userUrl,
+                            text: window.location.origin + window.location.pathname,
                             width: 250,
                             height: 250
                         });
                     }
-                }, 500);
+                }, 1000);
             }
 
             bindEvents() {
@@ -235,7 +276,7 @@
                 if (secret === this.SECRET_KEY) {
                     this.isAdmin = true;
                     this.showAdmin();
-                    this.toast('✅ অ্যাডমিন লগইন সফল!');
+                    this.toast('✅ লগইন সফল!');
                 } else {
                     this.toast('❌ ভুল সিক্রেট!');
                 }
@@ -247,6 +288,7 @@
                 document.getElementById('adminDashboard').style.display = 'block';
                 this.renderFiles();
                 this.updateStats();
+                this.updateLiveStatus('🟢 লাইভ');
             }
 
             logout() {
@@ -256,7 +298,7 @@
             }
 
             handleFiles(files) {
-                Array.from(files).forEach(async (file) => {
+                Array.from(files).forEach(file => {
                     if (file.size > 50 * 1024 * 1024) {
                         this.toast('❌ ৫০MB এর বেশি নয়!');
                         return;
@@ -277,7 +319,7 @@
                         
                         this.files.unshift(fileData);
                         this.saveFiles();
-                        this.toast(`✅ ${file.name} সংরক্ষিত!`);
+                        this.toast(`✅ ${file.name} আপলোড!`);
                     };
                     reader.readAsDataURL(file);
                 });
@@ -313,9 +355,7 @@
                 return `<div class="file-preview" style="display:flex;align-items:center;justify-content:center;font-size:48px;">${this.getIcon(file.type)}</div>`;
             }
 
-            getIcon(type) {
-                return type?.includes('pdf') ? '📄' : '📎';
-            }
+            getIcon(type) { return type?.includes('pdf') ? '📄' : '📎'; }
 
             deleteFile(id) {
                 this.files = this.files.filter(f => f.id !== id);
@@ -331,6 +371,10 @@
                     <div class="stat-card"><div class="stat-number">${total}</div>মোট ফাইল</div>
                     <div class="stat-card"><div class="stat-number">${(size/1024/1024).toFixed(1)}MB</div>মোট সাইজ</div>
                 `;
+            }
+
+            updateLiveStatus(status) {
+                document.getElementById('liveIndicator').textContent = status;
             }
 
             copyLink() {
@@ -359,7 +403,7 @@
             }
         }
 
-        const app = new FixedSecretDB();
+        const app = new MultiTabSecretDB();
     </script>
 </body>
 </html>
