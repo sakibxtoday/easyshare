@@ -6,404 +6,232 @@
     <title>📤 ফাইল আপলোড - মাল্টি ট্যাব</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh; color: white; padding: 20px;
-        }
-        .container { max-width: 1000px; margin: 0 auto; }
-        .glass {
-            background: rgba(255,255,255,0.1); backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.2); border-radius: 25px;
-            padding: 40px; margin: 40px 0; text-align: center;
-        }
-        .upload-zone {
-            border: 4px dashed rgba(255,255,255,0.5); border-radius: 20px;
-            padding: 80px 40px; cursor: pointer; transition: all 0.3s;
-            margin: 40px 0;
-        }
-        .upload-zone:hover, .upload-zone.dragover {
-            border-color: #00ff88 !important; background: rgba(0,255,136,0.15);
-            transform: scale(1.03);
-        }
-        .upload-icon { font-size: 80px; margin-bottom: 25px; }
-        .upload-title { font-size: 32px; font-weight: 800; margin-bottom: 15px; }
-        input[type="file"] { display: none; }
-        #qrCode { margin: 20px auto; background: white; padding: 20px; border-radius: 15px; }
-        
-        .admin-login, .admin-dashboard { display: none; }
-        .admin-login.show { display: block !important; }
-        #adminSecret { 
-            width: 100%; padding: 20px; border: none; border-radius: 15px;
-            background: rgba(255,255,255,0.2); color: white; font-size: 18px;
-            margin-bottom: 20px; text-align: center;
-        }
-        .admin-btn {
-            background: linear-gradient(135deg, #ffd700, #ffed4e); color: #000;
-            border: none; padding: 18px 40px; border-radius: 25px;
-            font-size: 18px; font-weight: 700; cursor: pointer; margin: 10px;
-        }
-        .header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 30px; padding-bottom: 20px;
-            border-bottom: 2px solid rgba(255,255,255,0.3);
-        }
-        .header h1 {
-            font-size: 36px; background: linear-gradient(135deg, #00ff88, #ffd700);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .logout-btn {
-            background: rgba(255,100,100,0.3); color: #ff6464; border: none;
-            padding: 15px 30px; border-radius: 25px; font-weight: 700; cursor: pointer;
-        }
-        .stats-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 25px; margin: 30px 0;
-        }
-        .stat-card {
-            background: rgba(255,255,255,0.15); padding: 30px; border-radius: 20px;
-            text-align: center;
-        }
-        .stat-number { font-size: 40px; font-weight: 800; color: #ffd700; }
-        .files-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 25px; margin-top: 30px;
-        }
-        .file-card {
-            background: rgba(255,255,255,0.15); border-radius: 20px; padding: 25px;
-            transition: all 0.3s;
-        }
-        .file-card:hover { transform: translateY(-8px); }
-        .file-preview {
-            width: 100%; height: 200px; object-fit: cover; border-radius: 15px;
-            margin-bottom: 15px; background: rgba(0,0,0,0.4);
-        }
-        .file-actions { display: flex; gap: 12px; }
-        .action-btn {
-            flex: 1; padding: 12px; border: none; border-radius: 12px;
-            font-weight: 600; cursor: pointer;
-        }
-        .download-btn { background: linear-gradient(135deg, #00ff88, #00cc6a); color: white; }
-        .delete-btn { background: rgba(255,100,100,0.4); color: #ff6464; }
-        .toast {
-            position: fixed; top: 30px; right: 30px; background: #00ff88;
-            color: #000; padding: 20px 30px; border-radius: 15px;
-            font-weight: 700; z-index: 9999; animation: slideIn 0.3s;
-        }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } }
-        .live-indicator { 
-            position: fixed; bottom: 20px; right: 20px; 
-            background: #00ff88; color: #000; padding: 10px 20px;
-            border-radius: 25px; font-weight: 700; font-size: 14px;
-        }
+        /* ================= CSS ================= */
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Segoe UI',sans-serif; background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); min-height:100vh; color:white; padding:20px; }
+        .container { max-width:1000px; margin:0 auto; }
+        .glass { background:rgba(255,255,255,0.1); backdrop-filter: blur(20px); border:1px solid rgba(255,255,255,0.2); border-radius:25px; padding:40px; margin:40px 0; text-align:center; }
+        .upload-zone { border:4px dashed rgba(255,255,255,0.5); border-radius:20px; padding:80px 40px; cursor:pointer; transition:all 0.3s; margin:40px 0; }
+        .upload-zone:hover, .upload-zone.dragover { border-color:#00ff88 !important; background:rgba(0,255,136,0.15); transform:scale(1.03); }
+        .upload-icon { font-size:80px; margin-bottom:25px; }
+        .upload-title { font-size:32px; font-weight:800; margin-bottom:15px; }
+        input[type="file"] { display:none; }
+        #qrCode { margin:20px auto; background:white; padding:20px; border-radius:15px; }
+        .admin-login, .admin-dashboard { display:none; }
+        .admin-login.show { display:block !important; }
+        #adminSecret { width:100%; padding:20px; border:none; border-radius:15px; background: rgba(255,255,255,0.2); color:white; font-size:18px; margin-bottom:20px; text-align:center; }
+        .admin-btn { background:linear-gradient(135deg,#ffd700,#ffed4e); color:#000; border:none; padding:18px 40px; border-radius:25px; font-size:18px; font-weight:700; cursor:pointer; margin:10px; }
+        .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; padding-bottom:20px; border-bottom:2px solid rgba(255,255,255,0.3); }
+        .header h1 { font-size:36px; background: linear-gradient(135deg,#00ff88,#ffd700); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .logout-btn { background: rgba(255,100,100,0.3); color:#ff6464; border:none; padding:15px 30px; border-radius:25px; font-weight:700; cursor:pointer; }
+        .stats-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap:25px; margin:30px 0; }
+        .stat-card { background: rgba(255,255,255,0.15); padding:30px; border-radius:20px; text-align:center; }
+        .stat-number { font-size:40px; font-weight:800; color:#ffd700; }
+        .files-grid { display:grid; grid-template-columns: repeat(auto-fill,minmax(350px,1fr)); gap:25px; margin-top:30px; }
+        .file-card { background: rgba(255,255,255,0.15); border-radius:20px; padding:25px; transition:all 0.3s; }
+        .file-card:hover { transform:translateY(-8px); }
+        .file-preview { width:100%; height:200px; object-fit:cover; border-radius:15px; margin-bottom:15px; background:rgba(0,0,0,0.4); }
+        .file-actions { display:flex; gap:12px; }
+        .action-btn { flex:1; padding:12px; border:none; border-radius:12px; font-weight:600; cursor:pointer; }
+        .download-btn { background: linear-gradient(135deg,#00ff88,#00cc6a); color:white; }
+        .delete-btn { background: rgba(255,100,100,0.4); color:#ff6464; }
+        .toast { position:fixed; top:30px; right:30px; background:#00ff88; color:#000; padding:20px 30px; border-radius:15px; font-weight:700; z-index:9999; animation:slideIn 0.3s; }
+        @keyframes slideIn { from{transform:translateX(100%); opacity:0;} }
+        .live-indicator { position:fixed; bottom:20px; right:20px; background:#00ff88; color:#000; padding:10px 20px; border-radius:25px; font-weight:700; font-size:14px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- ইউজার UI -->
-        <div class="glass" id="userUpload">
-            <div class="upload-icon">⬆️</div>
-            <h1 class="upload-title">ফাইল আপলোড করুন</h1>
-            <p style="opacity: 0.9; margin-bottom: 20px;">ছবি, ভিডিও, ডকুমেন্ট (৫০MB পর্যন্ত)</p>
-            <div id="qrCode" style="max-width: 300px; margin: 0 auto 30px;"></div>
-            <div class="upload-zone" id="uploadZone">
-                <div style="font-size: 24px; margin-bottom: 10px;">ক্লিক/ড্র্যাগ করুন</div>
-                <input type="file" id="fileInput" multiple>
-            </div>
-            <div id="uploadStatus"></div>
+<div class="container">
+    <!-- ইউজার UI -->
+    <div class="glass" id="userUpload">
+        <div class="upload-icon">⬆️</div>
+        <h1 class="upload-title">ফাইল আপলোড করুন</h1>
+        <p style="opacity:0.9; margin-bottom:20px;">ছবি, ভিডিও, ডকুমেন্ট (৫০MB পর্যন্ত)</p>
+        <div id="qrCode" style="max-width:300px; margin:0 auto 30px;"></div>
+        <div class="upload-zone" id="uploadZone">
+            <div style="font-size:24px; margin-bottom:10px;">ক্লিক/ড্র্যাগ করুন</div>
+            <input type="file" id="fileInput" multiple>
         </div>
-
-        <!-- হাইডেন অ্যাডমিন লগইন -->
-        <div class="glass admin-login" id="adminLogin">
-            <h1 style="color: #ffd700; margin-bottom: 30px;">🔐 অ্যাডমিন এন্ট্রি</h1>
-            <input type="password" id="adminSecret" placeholder="সিক্রেট কী">
-            <button class="admin-btn" onclick="app.adminLogin()">এন্ট্রি</button>
-            <p style="margin-top: 20px; opacity: 0.7;">সিক্রেট: <strong>mysecret2026</strong></p>
-        </div>
-
-        <!-- অ্যাডমিন ড্যাশবোর্ড -->
-        <div class="glass admin-dashboard" id="adminDashboard">
-            <div class="header">
-                <h1>📊 লাইভ ডেটাবেস</h1>
-                <button class="logout-btn" onclick="app.logout()">লগআউট</button>
-            </div>
-            <div style="background: rgba(0,0,0,0.3); padding: 25px; border-radius: 15px; margin-bottom: 30px;">
-                <div style="font-family: monospace; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
-                    শেয়ার: <span id="shareLink"></span>
-                </div>
-                <div style="font-family: monospace; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
-                    অ্যাডমিন: <span id="adminLink"></span>
-                </div>
-                <button class="admin-btn" onclick="app.copyLink()">📋 কপি</button>
-            </div>
-            <div class="stats-grid" id="stats"></div>
-            <div class="files-grid" id="filesGrid"></div>
-            <div class="live-indicator" id="liveIndicator">🔴 অফলাইন</div>
-        </div>
+        <div id="uploadStatus"></div>
     </div>
 
-    <script>
-        class MultiTabSecretDB {
-            constructor() {
-                this.SECRET_KEY = 'mysecret2026';
-                this.DB_NAME = 'multitabSecretDB_v3';
-                this.CHANNEL_NAME = 'file_upload_channel';
-                window.app = this;
-                this.files = [];
-                this.isAdmin = false;
-                this.channel = null;
-                this.init();
-            }
+    <!-- হাইডেন অ্যাডমিন লগইন -->
+    <div class="glass admin-login" id="adminLogin">
+        <h1 style="color:#ffd700; margin-bottom:30px;">🔐 অ্যাডমিন এন্ট্রি</h1>
+        <input type="password" id="adminSecret" placeholder="সিক্রেট কী">
+        <button class="admin-btn" onclick="app.adminLogin()">এন্ট্রি</button>
+        <p style="margin-top:20px; opacity:0.7;">সিক্রেট: <strong>mysecret2026</strong></p>
+    </div>
 
-            init() {
-                this.loadFiles();
-                this.setupBroadcastChannel();
-                this.setupStorageListener();
-                this.checkAdminAccess();
-                this.bindEvents();
-            }
+    <!-- অ্যাডমিন ড্যাশবোর্ড -->
+    <div class="glass admin-dashboard" id="adminDashboard">
+        <div class="header">
+            <h1>📊 লাইভ ডেটাবেস</h1>
+            <button class="logout-btn" onclick="app.logout()">লগআউট</button>
+        </div>
+        <div style="background: rgba(0,0,0,0.3); padding:25px; border-radius:15px; margin-bottom:30px;">
+            <div style="font-family:monospace; background: rgba(255,255,255,0.1); padding:15px; border-radius:10px; margin-bottom:15px;">
+                শেয়ার: <span id="shareLink"></span>
+            </div>
+            <div style="font-family:monospace; background: rgba(255,255,255,0.1); padding:15px; border-radius:10px; margin-bottom:15px;">
+                অ্যাডমিন: <span id="adminLink"></span>
+            </div>
+            <button class="admin-btn" onclick="app.copyLink()">📋 কপি</button>
+        </div>
+        <div class="stats-grid" id="stats"></div>
+        <div class="files-grid" id="filesGrid"></div>
+        <div class="live-indicator" id="liveIndicator">🔴 অফলাইন</div>
+    </div>
+</div>
 
-            // 🔥 মাল্টি-ট্যাব সিঙ্ক
-            setupBroadcastChannel() {
-                if ('BroadcastChannel' in window) {
-                    this.channel = new BroadcastChannel(this.CHANNEL_NAME);
-                    this.channel.onmessage = (event) => {
-                        if (event.data.type === 'files_updated') {
-                            this.loadFiles();
-                            if (this.isAdmin) {
-                                this.renderFiles();
-                                this.updateStats();
-                                this.updateLiveStatus('🟢 লাইভ');
-                            }
-                        }
-                    };
-                }
-            }
+<!-- Firebase + App JS -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-            setupStorageListener() {
-                window.addEventListener('storage', (e) => {
-                    if (e.key === this.DB_NAME) {
+    const firebaseConfig = {
+        apiKey: "AIzaSyBYFovE-TtHXcKpatJBjB4CPoODbIUCBdI",
+        authDomain: "easyshare-e5aea.firebaseapp.com",
+        databaseURL: "https://easyshare-e5aea-default-rtdb.firebaseio.com",
+        projectId: "easyshare-e5aea",
+        storageBucket: "easyshare-e5aea.appspot.com",
+        messagingSenderId: "454044842251",
+        appId: "1:454044842251",
+        measurementId: "G-RVJLVGV8XR"
+    };
+
+    const firebaseApp = initializeApp(firebaseConfig);
+    const database = getDatabase(firebaseApp);
+
+    class MultiTabSecretDB {
+        constructor() {
+            this.SECRET_KEY = 'mysecret2026';
+            this.CHANNEL_NAME = 'file_upload_channel';
+            window.app = this;
+            this.files = [];
+            this.isAdmin = false;
+            this.channel = null;
+            this.init();
+        }
+
+        init() {
+            this.loadFiles();
+            this.setupBroadcastChannel();
+            this.setupStorageListener();
+            this.checkAdminAccess();
+            this.bindEvents();
+        }
+
+        setupBroadcastChannel() {
+            if ('BroadcastChannel' in window) {
+                this.channel = new BroadcastChannel(this.CHANNEL_NAME);
+                this.channel.onmessage = (event) => {
+                    if(event.data.type==='files_updated') {
                         this.loadFiles();
-                        if (this.isAdmin) {
-                            this.renderFiles();
-                            this.updateStats();
-                            this.updateLiveStatus('🟢 লাইভ');
-                        }
+                        if(this.isAdmin){ this.renderFiles(); this.updateStats(); this.updateLiveStatus('🟢 লাইভ'); }
                     }
-                });
-            }
-
-            loadFiles() {
-                try {
-                    const saved = localStorage.getItem(this.DB_NAME);
-                    if (saved) {
-                        const newFiles = JSON.parse(saved);
-                        this.files = newFiles;
-                    }
-                } catch(e) {
-                    console.error('Load error:', e);
-                }
-            }
-
-            saveFiles() {
-                localStorage.setItem(this.DB_NAME, JSON.stringify(this.files));
-                
-                // 🔥 সব ট্যাবে নোটিফাই
-                if (this.channel) {
-                    this.channel.postMessage({ type: 'files_updated', timestamp: Date.now() });
-                }
-                
-                document.getElementById('uploadStatus').textContent = '✅ সংরক্ষিত!';
-                setTimeout(() => document.getElementById('uploadStatus').textContent = '', 2000);
-            }
-
-            checkAdminAccess() {
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('admin') === 'secret') {
-                    document.getElementById('adminLogin').classList.add('show');
-                    document.getElementById('userUpload').style.display = 'none';
-                }
-                const baseUrl = window.location.origin + window.location.pathname;
-                document.getElementById('shareLink').textContent = baseUrl;
-                document.getElementById('adminLink').textContent = baseUrl + '?admin=secret';
-                this.generateQR();
-            }
-
-            generateQR() {
-                setTimeout(() => {
-                    if (typeof QRCode !== 'undefined' && document.getElementById('qrCode')) {
-                        new QRCode(document.getElementById('qrCode'), {
-                            text: window.location.origin + window.location.pathname,
-                            width: 250,
-                            height: 250
-                        });
-                    }
-                }, 1000);
-            }
-
-            bindEvents() {
-                const uploadZone = document.getElementById('uploadZone');
-                const fileInput = document.getElementById('fileInput');
-
-                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
-                    uploadZone.addEventListener(event, e => {
-                        e.preventDefault();
-                        if (event === 'dragenter' || event === 'dragover') {
-                            uploadZone.classList.add('dragover');
-                        } else {
-                            uploadZone.classList.remove('dragover');
-                        }
-                        if (event === 'drop') {
-                            this.handleFiles(e.dataTransfer.files);
-                        }
-                    });
-                });
-
-                uploadZone.onclick = () => fileInput.click();
-                fileInput.onchange = e => {
-                    this.handleFiles(e.target.files);
-                    e.target.value = '';
                 };
-
-                document.getElementById('adminSecret').addEventListener('keypress', e => {
-                    if (e.key === 'Enter') this.adminLogin();
-                });
-            }
-
-            adminLogin() {
-                const secret = document.getElementById('adminSecret').value;
-                if (secret === this.SECRET_KEY) {
-                    this.isAdmin = true;
-                    this.showAdmin();
-                    this.toast('✅ লগইন সফল!');
-                } else {
-                    this.toast('❌ ভুল সিক্রেট!');
-                }
-            }
-
-            showAdmin() {
-                document.getElementById('userUpload').style.display = 'none';
-                document.getElementById('adminLogin').style.display = 'none';
-                document.getElementById('adminDashboard').style.display = 'block';
-                this.renderFiles();
-                this.updateStats();
-                this.updateLiveStatus('🟢 লাইভ');
-            }
-
-            logout() {
-                this.isAdmin = false;
-                document.getElementById('adminDashboard').style.display = 'none';
-                document.getElementById('adminLogin').style.display = 'block';
-            }
-
-            handleFiles(files) {
-                Array.from(files).forEach(file => {
-                    if (file.size > 50 * 1024 * 1024) {
-                        this.toast('❌ ৫০MB এর বেশি নয়!');
-                        return;
-                    }
-
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                        const fileData = {
-                            id: Date.now() + '_' + Math.random().toString(36),
-                            name: file.name,
-                            size: this.formatBytes(file.size),
-                            sizeBytes: file.size,
-                            type: file.type || 'unknown',
-                            data: reader.result,
-                            time: new Date().toLocaleString('bn-BD'),
-                            device: navigator.userAgent.slice(0, 30)
-                        };
-                        
-                        this.files.unshift(fileData);
-                        this.saveFiles();
-                        this.toast(`✅ ${file.name} আপলোড!`);
-                    };
-                    reader.readAsDataURL(file);
-                });
-            }
-
-            renderFiles() {
-                const container = document.getElementById('filesGrid');
-                if (!this.files.length) {
-                    container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:80px;opacity:0.6;"><div style="font-size:80px;margin-bottom:30px;">📂</div><h3>কোনো ফাইল নেই</h3></div>';
-                    return;
-                }
-                
-                container.innerHTML = this.files.map(f => `
-                    <div class="file-card">
-                        ${this.getPreview(f)}
-                        <div style="font-weight:700;color:#ffd700;font-size:18px;margin-bottom:8px;">${this.escapeHtml(f.name)}</div>
-                        <div style="color:rgba(255,255,255,0.8);font-size:14px;margin-bottom:15px;">${f.size} • ${f.time}</div>
-                        <div class="file-actions">
-                            <a href="${f.data}" download="${this.escapeHtml(f.name)}" class="action-btn download-btn">⬇️ ডাউনলোড</a>
-                            <button class="action-btn delete-btn" onclick="app.deleteFile('${f.id}')">🗑️ মুছুন</button>
-                        </div>
-                    </div>
-                `).join('');
-            }
-
-            getPreview(file) {
-                if (file.type?.startsWith('image/')) {
-                    return `<img src="${file.data}" class="file-preview" style="max-height:200px;">`;
-                }
-                if (file.type?.startsWith('video/')) {
-                    return `<video src="${file.data}" class="file-preview" controls style="max-height:200px;"></video>`;
-                }
-                return `<div class="file-preview" style="display:flex;align-items:center;justify-content:center;font-size:48px;">${this.getIcon(file.type)}</div>`;
-            }
-
-            getIcon(type) { return type?.includes('pdf') ? '📄' : '📎'; }
-
-            deleteFile(id) {
-                this.files = this.files.filter(f => f.id !== id);
-                this.saveFiles();
-                this.renderFiles();
-                this.updateStats();
-            }
-
-            updateStats() {
-                const total = this.files.length;
-                const size = this.files.reduce((sum, f) => sum + f.sizeBytes, 0);
-                document.getElementById('stats').innerHTML = `
-                    <div class="stat-card"><div class="stat-number">${total}</div>মোট ফাইল</div>
-                    <div class="stat-card"><div class="stat-number">${(size/1024/1024).toFixed(1)}MB</div>মোট সাইজ</div>
-                `;
-            }
-
-            updateLiveStatus(status) {
-                document.getElementById('liveIndicator').textContent = status;
-            }
-
-            copyLink() {
-                navigator.clipboard.writeText(document.getElementById('shareLink').textContent).then(() => {
-                    this.toast('✅ লিংক কপি!');
-                });
-            }
-
-            formatBytes(bytes) {
-                if (!bytes) return '0 B';
-                const k = 1024, sizes = ['B','KB','MB','GB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-            }
-
-            escapeHtml(text) {
-                const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#039;'};
-                return text.replace(/[&<>"']/g, m => map[m]);
-            }
-
-            toast(msg) {
-                const toast = document.createElement('div');
-                toast.className = 'toast'; toast.textContent = msg;
-                document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 3000);
             }
         }
 
-        const app = new MultiTabSecretDB();
-    </script>
+        setupStorageListener() {
+            window.addEventListener('storage', e => {
+                if(e.key==='files'){ this.loadFiles(); if(this.isAdmin){ this.renderFiles(); this.updateStats(); this.updateLiveStatus('🟢 লাইভ'); } }
+            });
+        }
+
+        async loadFiles() {
+            try {
+                const snapshot = await get(child(ref(database), 'files'));
+                this.files = snapshot.exists()? snapshot.val(): [];
+                if(this.isAdmin){ this.renderFiles(); this.updateStats(); this.updateLiveStatus('🟢 লাইভ'); }
+            } catch(e){ console.error(e); }
+        }
+
+        async saveFiles() {
+            try{
+                await set(ref(database,'files'),this.files);
+                if(this.channel) this.channel.postMessage({type:'files_updated', timestamp:Date.now()});
+                document.getElementById('uploadStatus').textContent='✅ সংরক্ষিত!';
+                setTimeout(()=>document.getElementById('uploadStatus').textContent='',2000);
+            } catch(e){ console.error(e); }
+        }
+
+        checkAdminAccess() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if(urlParams.get('admin')==='secret'){ document.getElementById('adminLogin').classList.add('show'); document.getElementById('userUpload').style.display='none'; }
+            const baseUrl = window.location.origin + window.location.pathname;
+            document.getElementById('shareLink').textContent = baseUrl;
+            document.getElementById('adminLink').textContent = baseUrl + '?admin=secret';
+            this.generateQR();
+        }
+
+        generateQR() {
+            setTimeout(()=>{ if(typeof QRCode!=='undefined' && document.getElementById('qrCode')){ new QRCode(document.getElementById('qrCode'), { text: window.location.origin + window.location.pathname, width:250, height:250 }); } },1000);
+        }
+
+        bindEvents() {
+            const uploadZone=document.getElementById('uploadZone');
+            const fileInput=document.getElementById('fileInput');
+            ['dragenter','dragover','dragleave','drop'].forEach(event=>{
+                uploadZone.addEventListener(event,e=>{
+                    e.preventDefault();
+                    if(event==='dragenter'||event==='dragover') uploadZone.classList.add('dragover');
+                    else uploadZone.classList.remove('dragover');
+                    if(event==='drop') this.handleFiles(e.dataTransfer.files);
+                });
+            });
+            uploadZone.onclick = ()=> fileInput.click();
+            fileInput.onchange = e=>{ this.handleFiles(e.target.files); e.target.value=''; };
+            document.getElementById('adminSecret').addEventListener('keypress', e=>{ if(e.key==='Enter') this.adminLogin(); });
+        }
+
+        adminLogin() { const secret=document.getElementById('adminSecret').value; if(secret===this.SECRET_KEY){ this.isAdmin=true; this.showAdmin(); this.toast('✅ লগইন সফল!'); } else this.toast('❌ ভুল সিক্রেট!'); }
+        showAdmin(){ document.getElementById('userUpload').style.display='none'; document.getElementById('adminLogin').style.display='none'; document.getElementById('adminDashboard').style.display='block'; this.renderFiles(); this.updateStats(); this.updateLiveStatus('🟢 লাইভ'); }
+        logout(){ this.isAdmin=false; document.getElementById('adminDashboard').style.display='none'; document.getElementById('adminLogin').style.display='block'; }
+
+        handleFiles(files){
+            Array.from(files).forEach(file=>{
+                if(file.size>50*1024*1024){ this.toast('❌ ৫০MB এর বেশি নয়!'); return; }
+                const reader=new FileReader();
+                reader.onload=()=>{
+                    const fileData={ id:Date.now()+'_'+Math.random().toString(36), name:file.name, size:this.formatBytes(file.size), sizeBytes:file.size, type:file.type||'unknown', data:reader.result, time:new Date().toLocaleString('bn-BD'), device:navigator.userAgent.slice(0,30) };
+                    this.files.unshift(fileData);
+                    this.saveFiles();
+                    this.toast(`✅ ${file.name} আপলোড!`);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        renderFiles(){
+            const container=document.getElementById('filesGrid');
+            if(!this.files.length){ container.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:80px;opacity:0.6;"><div style="font-size:80px;margin-bottom:30px;">📂</div><h3>কোনো ফাইল নেই</h3></div>'; return; }
+            container.innerHTML=this.files.map(f=>`
+                <div class="file-card">
+                    ${this.getPreview(f)}
+                    <div style="font-weight:700;color:#ffd700;font-size:18px;margin-bottom:8px;">${this.escapeHtml(f.name)}</div>
+                    <div style="color:rgba(255,255,255,0.8);font-size:14px;margin-bottom:15px;">${f.size} • ${f.time}</div>
+                    <div class="file-actions">
+                        <a href="${f.data}" download="${this.escapeHtml(f.name)}" class="action-btn download-btn">⬇️ ডাউনলোড</a>
+                        <button class="action-btn delete-btn" onclick="app.deleteFile('${f.id}')">🗑️ মুছুন</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        getPreview(file){ if(file.type?.startsWith('image/')) return `<img src="${file.data}" class="file-preview" style="max-height:200px;">`; if(file.type?.startsWith('video/')) return `<video src="${file.data}" class="file-preview" controls style="max-height:200px;"></video>`; return `<div class="file-preview" style="display:flex;align-items:center;justify-content:center;font-size:48px;">${this.getIcon(file.type)}</div>`; }
+        getIcon(type){ return type?.includes('pdf')?'📄':'📎'; }
+        deleteFile(id){ this.files=this.files.filter(f=>f.id!==id); this.saveFiles(); this.renderFiles(); this.updateStats(); }
+        updateStats(){ const total=this.files.length; const size=this.files.reduce((sum,f)=>sum+f.sizeBytes,0); document.getElementById('stats').innerHTML=`<div class="stat-card"><div class="stat-number">${total}</div>মোট ফাইল</div><div class="stat-card"><div class="stat-number">${(size/1024/1024).toFixed(1)}MB</div>মোট সাইজ</div>`; }
+        updateLiveStatus(status){ document.getElementById('liveIndicator').textContent=status; }
+        copyLink(){ navigator.clipboard.writeText(document.getElementById('shareLink').textContent).then(()=>this.toast('✅ লিংক কপি!')); }
+        formatBytes(bytes){ if(!bytes) return '0 B'; const k=1024,sizes=['B','KB','MB','GB']; const i=Math.floor(Math.log(bytes)/Math.log(k)); return parseFloat((bytes/Math.pow(k,i)).toFixed(1))+' '+sizes[i]; }
+        escapeHtml(text){ const map={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#039;'}; return text.replace(/[&<>"']/g,m=>map[m]); }
+        toast(msg){ const toast=document.createElement('div'); toast.className='toast'; toast.textContent=msg; document.body.appendChild(toast); setTimeout(()=>toast.remove(),3000); }
+    }
+
+    const app=new MultiTabSecretDB();
+</script>
 </body>
 </html>
